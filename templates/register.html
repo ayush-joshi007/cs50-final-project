@@ -1,0 +1,28 @@
+{% extends "layout.html" %}
+{% block title %}
+    Register
+{% endblock %}
+
+{% block body %}
+    <h2>Registration Form</h2>
+    <form>
+        <div class="mb-3">
+            <label for="username" class="form-label m-3">Username</label>
+            <input type="text" class="form-control" id="username" aria-describedby="usernameHelp" autocomplete="off" required autofocus>
+            <div id="usernameHelp" class="form-text">(Never share your credentials with anyone else.)</div>
+        </div>
+        <div class="mb-3">
+            <label for="Password" class="form-label m-3">Password</label>
+            <input type="password" class="form-control" id="Password" autocomplete="off" required>
+        </div>
+        <div class="mb-3">
+            <label for="confirmation" class="form-label m-3">Confirm Password</label>
+            <input type="password" class="form-control" id="confirmation" autocomplete="off" required>
+        </div>
+        <div class="mb-3 form-check m-3">
+            <input type="checkbox" class="form-check-input me-2" id="Check">
+            <label class="form-check-label" for="Check">Agree Terms & Conditions</label>
+        </div>
+        <button type="submit" class="btn btn-primary mx-auto d-block">Register</button>
+    </form>
+{% endblock %}

@@ -11,6 +11,14 @@ Session(app)                                   #Activate the session system
 def index():
     return render_template("index.html")
 
+@app.route("/register")
+def register():
+    if request.method=="GET":
+        return render_template("register.html")
+    
+    if request.method=="POST":
+        
+
 
 
 

@@ -12,46 +12,49 @@
     <link rel="icon" href="{{ url_for('static', filename='favicon.png') }}">
 </head>
 <body>
-    <nav class="navbar" style="background-color: rgb(99, 199, 166);">
-    <div style="display:flex">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="index.html" style="font-size: 50px;">
-            <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" width="100" height="100" class="d-inline-block align-text-top">
-            P&euro;rsonal &pound;inance Track&euro;r
-            </a>
-        </div>
-        <div style="padding: 20px; padding-top: 25px;">
-            <a href="transactions.html" class="navbar-brand" style="font-size: 25px">Transactions</a>
+    <!-- NAVBAR -->
+<nav class="navbar" style="background-color: rgb(99, 199, 166);">
+  <div class="container-fluid">
 
-        </div>
-        <div style="padding: 20px; padding-top: 25px;">
-            <a href="summary.html" class="navbar-brand" style="font-size: 25px">Summary</a>
+    <!-- Brand -->
+    <a class="navbar-brand d-flex align-items-center gap-3" href="index.html" style="font-size: 40px;">
+      <img src="{{ url_for('static', filename='logo.png') }}" width="80" height="80">
+      P€rsonal £inance Track€r
+    </a>
 
-        </div>
-        <div style="padding: 20px; padding-top: 25px;">
-            <a href="category.html" class="navbar-brand" style="font-size: 25px">Categories</a>
+    <!-- Toggle Button ON RIGHT -->
+    <button class="navbar-toggler ms-auto" type="button" 
+            data-bs-toggle="offcanvas" data-bs-target="#offcanvasMenu"
+            aria-controls="offcanvasMenu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
 
-        </div>
-        <div style="padding: 20px; padding-top: 25px;">
-            <ul class="navbar-nav">
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" style="color: white; font-size: 1.3rem;" href="#" role="button" data-bs-toggle="dropdown">
-                        More
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="/charts">Charts</a></li>
-                        <li><a class="dropdown-item" href="/add">Add Alerts</a></li>
-                        <li><a class="dropdown-item" href="/themes">Themes</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="/logout">Logout</a></li>
-                    </ul>
-                </li>
-            </ul>
+  </div>
+</nav>
 
-        </div>
-    </div>
-    
-    </nav>
+<!-- RIGHT SIDE MENU -->
+<div class="offcanvas offcanvas-end text-bg-dark" tabindex="-1" id="offcanvasMenu">
+
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title">Menu</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+  </div>
+
+  <div class="offcanvas-body">
+    <a href="transactions.html" class="d-block text-white py-2">Transactions</a>
+    <a href="summary.html" class="d-block text-white py-2">Summary</a>
+    <a href="category.html" class="d-block text-white py-2">Categories</a>
+    <a href="charts.html" class="d-block text-white py-2">Charts</a>
+    <a href="download.html" class="d-block text-white py-2">Download data</a>
+    <a href="alerts.html" class="d-block text-white py-2">Add alert</a>
+    <a href="themes.html" class="d-block text-white py-2">Themes</a>
+    <a href="bills.html" class="d-block text-white py-2">Add bills</a>
+    <a href="logout.html" class="d-block text-white py-2">Log Out</a>
+  </div>
+
+</div>
+
+
 
     {% block body %}
 
