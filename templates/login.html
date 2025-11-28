@@ -1,8 +1,7 @@
 {% extends "layout.html" %}
 {% block title %}
-    Register
+    Login
 {% endblock %}
-
 
 {% block body %}
     <style>
@@ -10,7 +9,7 @@
             display: none !important;
         }
     </style>
-    <h2>Registration Form</h2>
+    <h2>LogIn Page</h2>
     {% with messages = get_flashed_messages(with_categories=true) %}
             {% for category, message in messages %}
                 <div class="alert alert-{{ category }}">
@@ -18,9 +17,7 @@
                 </div>
             {% endfor %}
     {% endwith %}
-
-
-    <form action="/register" method="POST">
+    <form action="/login" method="POST">
         <div class="mb-3">
             <label for="username" class="form-label m-3">Username</label>
             <input type="text" class="form-control" id="username" name="username" aria-describedby="usernameHelp" autocomplete="off" required autofocus>
@@ -31,16 +28,12 @@
             <label for="Password" class="form-label m-3">Password</label>
             <input type="password" class="form-control" id="Password" name="password" autocomplete="off" required>
         </div>
-        
-        <div class="mb-3">
-            <label for="confirmation" class="form-label m-3">Confirm Password</label>
-            <input type="password" class="form-control" id="confirmation" name= "confirmation" autocomplete="off" required>
+        <div class="d-flex justify-content-center gap-3" style="padding:40px;">
+            <button class="btn btn-primary" type="submit">Log In</button>
+            <form action="/register" method="GET">
+                <button type="submit" class="btn btn-primary">Register</button>
+            </form>
         </div>
-        
-        <div class="mb-3 form-check m-3">
-            <input type="checkbox" class="form-check-input me-2" id="Check" required name="terms">
-            <label class="form-check-label" for="Check">Agree Terms & Conditions</label>
-        </div>
-        <button type="submit" class="btn btn-primary mx-auto d-block">Register</button>
     </form>
+    
 {% endblock %}
