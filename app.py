@@ -1,8 +1,10 @@
-from flask import Flask, render_template, request, redirect, session, url_for, flash, get_flashed_messages
+from flask import Flask, render_template, request, redirect, session, url_for, flash, get_flashed_messages,Response, g
 from flask_session import Session
 from helpers import db_username_exists, login_required
+import io
+import csv
 import pytz
-from flask import jsonify
+import calendar
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timezone, timedelta
 from functools import wraps
@@ -447,6 +449,181 @@ def add_category():
         db.commit()
         db.close()
         return redirect("/categories")
+    
+
+
+
+@app.route("/charts",methods=["GET"])
+@login_required
+def charts():
+    if request.method=="GET":
+        db=sqlite3.connect("transactions.db")
+        db.row_factory=sqlite3.Row
+        cur=db.cursor()
+        cur.execute("""
+            SELECT 
+                c.name AS category,
+                SUM(t.amount) AS total_expense
+            FROM transactions t
+            JOIN categories c ON t.category_id = c.id
+            WHERE 
+                t.type = 'expense'
+                AND t.user_id = ?
+                AND strftime('%Y-%m', t.created_at) = strftime('%Y-%m', 'now')
+            GROUP BY c.name
+            """, (session["user_id"],))
+
+        rows = cur.fetchall()
+
+
+        labels_donut = [row["category"] for row in rows]
+        values_donut = [row["total_expense"] for row in rows]
+        labels_donut_js = str(labels_donut)
+        values_donut_js = str(values_donut)
+
+
+
+        cur.execute("""
+            SELECT 
+                strftime('%Y-%m-%d', t.created_at) AS day,
+                COALESCE(SUM(t.amount), 0) AS total_expense
+            FROM transactions t
+            WHERE 
+                t.type = 'expense'
+                AND t.user_id = ?
+                AND date(t.created_at) BETWEEN date('now','-6 days') AND date('now')
+            GROUP BY day
+        """, (session["user_id"],))
+        rows_7 = cur.fetchall()
+
+        # Build a dict like {"2025-01-21": 312.1, ...}
+        day_to_sum = {row["day"]: float(row["total_expense"] or 0) for row in rows_7}
+
+        # Create labels for last 7 days in correct order
+        from datetime import datetime, timedelta
+        today = datetime.now().date()
+
+        labels_7 = []
+        values_7 = []
+
+        for i in range(6, -1, -1):
+            d = today - timedelta(days=i)
+            day_sql = d.strftime("%Y-%m-%d")
+            labels_7.append(d.strftime("%d %b"))      # pretty date like "29 Nov"
+            values_7.append(day_to_sum.get(day_sql, 0))
+
+        labels_7_js = str(labels_7)
+        values_7_js = str(values_7)
+
+        
+
+
+        cur.execute("""
+            SELECT 
+                strftime('%d', t.created_at) AS day,
+                SUM(t.amount) AS total_expense
+            FROM transactions t
+            WHERE 
+                t.type = 'expense'
+                AND t.user_id = ?
+                AND strftime('%Y-%m', t.created_at) = strftime('%Y-%m', 'now')
+            GROUP BY day
+            ORDER BY day
+            """, (session["user_id"],))
+
+        rows_month_line = cur.fetchall()
+
+        today = datetime.now()
+        days_in_month = calendar.monthrange(today.year, today.month)[1]
+
+        # dict like {"01": 120.0, "02": 0, ...}
+        day_to_sum = {row["day"]: float(row["total_expense"] or 0) for row in rows_month_line}
+
+        labels_line = []
+        values_line = []
+
+        for d in range(1, days_in_month + 1):
+            day_str = f"{d:02d}"   # "01", "02", etc.
+            labels_line.append(day_str)
+            values_line.append(day_to_sum.get(day_str, 0))
+
+        labels_line_js = str(labels_line)
+        values_line_js = str(values_line)
+
+        return render_template("charts.html", labels_donut_js=labels_donut_js, values_donut_js=values_donut_js, labels_7_js=labels_7_js, values_7_js=values_7_js, labels_line_js=labels_line_js, values_line_js=values_line_js)
+    
+
+
+@app.route("/download/transactions.csv")
+@login_required
+def download_transactions_csv():
+    user_id = session["user_id"]
+
+    db = sqlite3.connect("transactions.db")
+    db.row_factory = sqlite3.Row
+    cur = db.cursor()
+
+    cur.execute("""
+        SELECT t.id, t.created_at, t.amount, t.type, c.name AS category
+        FROM transactions t
+        LEFT JOIN categories c ON t.category_id = c.id
+        WHERE t.user_id = ?
+        ORDER BY t.created_at ASC
+    """, (user_id,))
+    rows = cur.fetchall()
+    db.close()
+
+    # build CSV in-memory
+    si = io.StringIO()
+    writer = csv.writer(si)
+
+    # header row
+    writer.writerow(["id", "created_at_IST", "amount", "type", "category"])
+
+    # CSV-injection protection
+    def safe_cell(val):
+        if val is None:
+            return ""
+        s = str(val)
+        if s and s[0] in ("=", "+", "-", "@", "\t"):
+            return "'" + s
+        return s
+
+    # Convert UTC --> IST (UTC + 5:30)
+    IST_OFFSET = timedelta(hours=5, minutes=30)
+
+    for r in rows:
+        # convert from string → datetime → add offset → format back
+        try:
+            utc_dt = datetime.strptime(r["created_at"], "%Y-%m-%d %H:%M:%S")
+            ist_dt = utc_dt + IST_OFFSET
+            ist_str = ist_dt.strftime("%Y-%m-%d %H:%M:%S")
+        except:
+            # if parsing fails, just use original string
+            ist_str = r["created_at"]
+
+        writer.writerow([
+            r["id"],
+            ist_str,                # <-- IST timestamp
+            r["amount"],
+            r["type"],
+            safe_cell(r["category"])
+        ])
+
+    output = si.getvalue()
+    si.close()
+
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"transactions_{user_id}_{ts}.csv"
+
+    return Response(
+        output,
+        mimetype="text/csv",
+        headers={
+            "Content-Disposition": f"attachment; filename={filename}"
+        }
+    )
+
 
 
 
