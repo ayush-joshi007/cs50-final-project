@@ -11,3 +11,24 @@ h2{
     padding:20px;
     text-decoration:underline;
 }
+/* backdrop under the panel (covers whole screen) */
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 1000;            /* lower than panel */
+  pointer-events: auto;     /* catches clicks to close modal */
+}
+
+/* panel on top so it is clickable/typable */
+.modal-panel {
+  position: relative;
+  background: #fff;
+  padding: 18px;
+  border-radius: 8px;
+  width: 320px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  z-index: 1001;            /* higher than backdrop */
+  pointer-events: auto;     /* ensure it receives mouse events */
+}
+

@@ -1,0 +1,71 @@
+{% extends "layout.html" %}
+{% block title %}Bills{% endblock %}
+
+{% block body %}
+<div class="container py-3">
+  <h3 style="text-align: center; text-decoration: underline;">Bills</h3><br>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="container mt-3">
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+        </div>
+    {% endif %}
+    {% endwith %}
+
+  <!-- Upload form -->
+  <form action="{{ url_for('bills') }}" method="post" enctype="multipart/form-data" class="mb-4">
+    <div class="row g-2 align-items-center">
+      <div class="col-auto">
+        <input type="text" name="filename" class="form-control" placeholder="Filename (e.g. electricity_jan_2025)" required>
+      </div>
+      <div class="col-auto">
+        <input type="file" name="file" accept=".png,.jpg,.jpeg,.gif,.pdf" class="form-control" required>
+      </div>
+      <div class="col-auto" style="max-width:140px;">
+        <input type="number" step="0.01" name="amount" class="form-control" placeholder="Amount (optional)">
+      </div>
+      <div class="col-auto">
+        <button class="btn btn-primary" type="submit">Upload Bill</button>
+      </div>
+    </div>
+  </form>
+
+  <!-- Bills table -->
+  <div class="table-responsive">
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Filename</th>
+        <th>Amount</th>
+        <th>Uploaded</th>
+        <th>File</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for b in bills %}
+      <tr>
+        <td style="vertical-align:middle;">{{ b.filename }}</td>
+        <td style="vertical-align:middle;">{% if b.amount is not none %}₹{{ '%.2f'|format(b.amount) }}{% else %}-{% endif %}</td>
+        <td style="vertical-align:middle;">{{ b.uploaded_at_fmt }}</td>
+        <td style="vertical-align:middle;">
+          <a class="btn btn-sm btn-outline-primary" href="{{ url_for('static', filename='uploads/' ~ b.filename) }}" download="{{ b.filename }}">Download</a>
+        </td>
+        <td style="vertical-align:middle;">
+          <form method="post" action="{{ url_for('delete_bill', bill_id=b.id) }}" onsubmit="return confirm('Delete this bill?');">
+            <button class="btn btn-sm btn-danger" type="submit">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+
+</div>
+{% endblock %}

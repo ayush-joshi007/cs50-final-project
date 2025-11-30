@@ -5,6 +5,20 @@
 
 {% block body %}
     <h3 style="padding:20px; text-align: center; text-decoration: underline;">Welcome back, {{ username }}</h3>
+    {# --- Flash messages (one-time) --- #}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="container mt-3">
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+        </div>
+    {% endif %}
+    {% endwith %}
+
     <div style="display: flex;">
         <div style="flex: 1; margin-left:100px;">
             <h4 style="padding:20px;">This Month Overview</h4>
@@ -42,11 +56,9 @@
                     <tr>
                         <th>Category:</th>
                         <td><select name="category" id="category">
-                                <option value="salary">Salary</option>
-                                <option value="food">Food</option>
-                                <option value="travel">Travel</option>
-                                <option value="shopping">Shopping</option>
-                                <option value="gift">Gift</option>
+                            {% for r in cat_rows %}
+                                <option value="{{ r.name }}">{{ r.name }}</option>
+                            {% endfor %}
                             </select></td>
                     </tr>
                     <tr>
@@ -133,14 +145,59 @@
                     <td>{{ change }}%</td>
                 </tr>
             </table>
-            <a href="/alerts" class="btn btn-primary" style="margin-left:50px; margin-top:10px;">Add alert</a>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addAlertModal">
+            + Add Alert
+            </button>
+
+        
         </div>
     </div>
+
+    <!-- Add Alert Modal -->
+<div class="modal fade" id="addAlertModal" tabindex="-1" aria-labelledby="addAlertModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      
+      <div class="modal-header">
+        <h5 class="modal-title" id="addAlertModalLabel">Create Alert</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <form action="{{ url_for('alerts') }}" method="post">
+      <div class="modal-body">
+
+        <div class="mb-3">
+          <label class="form-label">Amount Threshold</label>
+          <input type="number" class="form-control" name="amount_threshold" step="0.01" required placeholder="e.g. 5000">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Category</label>
+          <select class="form-select" name="category_id">
+            <option value="all">All categories</option>
+            {% for c in cat_rows %}
+              <!-- Minimal change: send the numeric id so server stores category_id correctly -->
+              <option value="{{ c['id'] }}">{{ c['name'] }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Alert</button>
+      </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+
+
 
 
 
 
     
 {% endblock %}
-
-
